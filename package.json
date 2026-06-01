@@ -15,6 +15,7 @@
   "author": "Solomon Druce",
   "license": "GPL-3.0-only",
   "dependencies": {
+    "cors": "^2.8.6",
     "datatables.net-dt": "^2.3.8",
     "ejs": "^5.0.2",
     "express": "^5.2.1",
