@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+
+  <head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/style.css">
+    <title>Login</title>
+    
+  </head>
+
+  <body>
+
+    <div class="Register-container">
+
+      <div class="Register">
+
+        <% if (error) { %>
+          <p class="error"><%= error %></p>
+        <% } %>
+
+        <form action="/register" method="POST">
+
+            <input id="register-username" type="username" name="username" placeholder="Username" required>
+            <input id="register-email" type="email" name="email" placeholder="Email Address" required>
+            <input id="login-password" type="password" name="password" placeholder="Password" required>
+            <button type="submit">Register</button>
+
+        </form>
+
+        <p class="register-text">
+          Have an account? <a href="/login">Login here.</a>
+        </p>
+
+      </div>
+
+    </div>
+
+  </body>
+
+</html>
