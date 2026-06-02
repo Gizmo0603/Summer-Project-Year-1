@@ -30,7 +30,7 @@ function Login() { //Defines component.
 
         console.log('Logged in user:', data.user);
 
-        navigate("/main"); //successful login.
+        navigate("/home"); //successful login.
     };
 
     return (
