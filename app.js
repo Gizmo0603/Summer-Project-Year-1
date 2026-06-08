@@ -46,9 +46,6 @@ CREATE TABLE IF NOT EXISTS users (
 )
 `);
 
-
-
-
 app.get('/', (req, res) => {
     res.send('API running');
 }); //test endpoint. Not used anymore.
@@ -63,7 +60,7 @@ app.post('/api/login', (req, res) => {
         }); 
     }
 
-    const user = db.prepare( //Finds matching users.
+    const user = db.prepare( //FInds matching users.
         'SELECT * FROM users WHERE email = ? AND password = ?'
     ).get(email, md5(password));
 
@@ -122,6 +119,12 @@ app.get('/main', (req, res) => { //protected, requires login.
     } //if not logged in, gives error back.
 
     res.send('Logged in');
+});
+
+app.post("/logout", (req, res) => {
+  req.session.destroy(() => {
+    res.json({ success: true });
+  });
 });
 
 app.listen(3000, () => {

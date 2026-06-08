@@ -11,13 +11,31 @@
     height: 75vh;
     background: rgba(175, 186, 201, 0.38);
     backdrop-filter: blur(10px);
-
+    margin-top: -228px;
     border-radius: 20px;
     padding: 20px;
-
     display: flex;
-    justify-content: center;
-    align-items: center;
     flex-direction: column;
+}
 
+.tab-bar {
+    display: flex;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.tab-bar button {
+    flex: 1;
+    padding: 12px;
+    border: black;
+    background: transparent;
+    cursor: pointer;
+}
+
+nav button {
+    background: rgba(175, 186, 201, 0.38);
+    border: 2px solid black;
+    padding: 10px 20px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
 }
