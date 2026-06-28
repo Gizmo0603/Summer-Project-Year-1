@@ -32,8 +32,11 @@ app.use(session({
     secret: 'your-secret-key',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false }
-})); //encrypts session data
+    cookie: {
+        secure: false,
+        sameSite: "lax"
+    }
+}));
 
 const db = new DatabaseSync(process.env.DB_PATH || 'database.sqlite');
 //creates dbs
@@ -71,14 +74,26 @@ app.post('/api/login', (req, res) => {
         });
     }
 
-    req.session.userId = user.id;
+ req.session.userId = user.id;
+    req.session.username = user.username;
 
     return res.json({
         success: true,
         user: {
             id: user.id,
-            username: user.username //logs user in.
+            username: user.username
         }
+    });
+});
+
+app.get("/api/me", (req, res) => {
+    if (!req.session.userId) {
+        return res.json({ loggedIn: false });
+    }
+
+    res.json({
+        loggedIn: true,
+        username: req.session.username
     });
 });
 
@@ -122,8 +137,13 @@ app.get('/main', (req, res) => { //protected, requires login.
 });
 
 app.post("/logout", (req, res) => {
-  req.session.destroy(() => {
-    res.json({ success: true });
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ success: false });
+    }
+
+    res.clearCookie("connect.sid"); // IMPORTANT
+    return res.json({ success: true });
   });
 });
 

@@ -15,6 +15,7 @@ function Login() { //Defines component.
 
         const res = await fetch('/api/login', { //sends request to backend, with vite works.
             method: 'POST', //sending data
+            credentials: "include",
             headers: {
                 'Content-Type': 'application/json'
             }, //sending json data specifically.

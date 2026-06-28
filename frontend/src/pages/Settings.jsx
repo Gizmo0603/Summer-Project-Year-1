@@ -5,7 +5,7 @@ function Settings() {
     const navigate = useNavigate();
 
         const handleLogout = async () => {
-            await fetch("https://turbo-doodle-q7jx96v5wp7whxwpx-3000.app.github.dev/logout", {
+            await fetch("https://miniature-spoon-g4jp56xvgxgqfwvj-3000.app.github.dev/logout", {
                 method: "POST",
                 credentials: "include",
             });
