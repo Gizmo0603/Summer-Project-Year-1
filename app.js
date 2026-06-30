@@ -11,18 +11,8 @@ const allowedOrigins = [
 ]; //allowed frontends.
 
 app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin) return callback(null, true); //Runs on all requests.
-
-        if (allowedOrigins.includes(origin)) {
-            return callback(null, true); //if frontend matches, is allowed.
-        }
-
-        return callback(null, true); // //allow everything regardless.
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type']
+    origin: "https://turbo-doodle-q7jx96v5wp7whxwpx-5173.app.github.dev",
+    credentials: true
 }));
 
 app.use(express.json()); //lets it read json.
@@ -136,15 +126,10 @@ app.get('/main', (req, res) => { //protected, requires login.
     res.send('Logged in');
 });
 
-app.post("/logout", (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ success: false });
-    }
-
-    res.clearCookie("connect.sid"); // IMPORTANT
-    return res.json({ success: true });
-  });
+app.post("/api/logout", (req, res) => {
+    res.clearCookie("connect.sid", { path: "/" });
+    req.session?.destroy(() => {});
+    res.json({ success: true });
 });
 
 app.listen(3000, () => {

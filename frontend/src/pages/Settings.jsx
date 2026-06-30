@@ -4,26 +4,30 @@ import { useNavigate } from "react-router-dom";
 function Settings() {
     const navigate = useNavigate();
 
-        const handleLogout = async () => {
-            await fetch("https://miniature-spoon-g4jp56xvgxgqfwvj-3000.app.github.dev/logout", {
+    const handleLogout = async () => {
+        try {
+            await fetch("/api/logout", {
                 method: "POST",
-                credentials: "include",
+                credentials: "include"
             });
 
             navigate("/");
-        };
+        } catch (err) {
+            console.error("Logout failed:", err);
+        }
+    };
 
     return (
         <div className="main-page">
             <div className="main-container">
-                <h1> Settings </h1>
+                <h1>Settings</h1>
 
                 <button onClick={handleLogout}>
                     Logout
                 </button>
-            </div> 
+            </div>
         </div>
-        );
+    );
 }
 
 export default Settings;
