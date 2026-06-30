@@ -1,11 +1,14 @@
-const express = require('express'); //Hnadles routes.
-const { DatabaseSync } = require('node:sqlite'); //SQLite stuff.
+const express = require('express'); //Imports express (framewrk)
+const { DatabaseSync } = require('node:sqlite'); //imports sqlite
 const md5 = require('md5'); //hashes passwords.
-const session = require('express-session'); //stores login state.
+const session = require('express-session'); //stores login state/allows server to remember
 const cors = require('cors'); //allows frontend to talk to back
 const app = express(); //server instance.
+const multer = require("multer");//file uploads.
+const path = require("path"); //built in path, returns things such as .png/.jpg.
+const fs = require("fs");
 
-const allowedOrigins = [
+const allowedOrigins = [ //Array
     'http://localhost:5173',
     'https://turbo-doodle-q7jx96v5wp7whxwpx-5173.app.github.dev'
 ]; //allowed frontends.
@@ -13,12 +16,12 @@ const allowedOrigins = [
 app.use(cors({
     origin: "https://turbo-doodle-q7jx96v5wp7whxwpx-5173.app.github.dev",
     credentials: true
-}));
+})); //Cookies and such. Saying it is allowed.
 
 app.use(express.json()); //lets it read json.
 app.use(express.urlencoded({ extended: true })); //form style dataallowed.
 
-app.use(session({
+app.use(session({ //used to store data, and allows to see who is logged in.
     secret: 'your-secret-key',
     resave: false,
     saveUninitialized: false,
@@ -28,7 +31,7 @@ app.use(session({
     }
 }));
 
-const db = new DatabaseSync(process.env.DB_PATH || 'database.sqlite');
+const db = new DatabaseSync(process.env.DB_PATH || 'database.sqlite'); //new db. One for users/files
 //creates dbs
 db.exec(`
 CREATE TABLE IF NOT EXISTS users (
@@ -38,22 +41,30 @@ CREATE TABLE IF NOT EXISTS users (
     password TEXT NOT NULL
 )
 `);
+db.exec(`
+CREATE TABLE IF NOT EXISTS files (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    filename TEXT NOT NULL,
+    original_name TEXT,
+    uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+`)
 
 app.get('/', (req, res) => {
     res.send('API running');
 }); //test endpoint. Not used anymore.
 
-app.post('/api/login', (req, res) => {
+app.post('/api/login', (req, res) => { //Runs when it gets POST /routes
     const { email, password } = req.body;
-//front end calls this + input.
-    if (!email || !password) { //validation. Stops empty requests.
+    if (!email || !password) { //stops empty boxes
         return res.status(400).json({
             success: false,
             error: 'Missing email or password'
         }); 
     }
 
-    const user = db.prepare( //FInds matching users.
+    const user = db.prepare( //FInds matching users. ? are placeholder
         'SELECT * FROM users WHERE email = ? AND password = ?'
     ).get(email, md5(password));
 
@@ -76,7 +87,7 @@ app.post('/api/login', (req, res) => {
     });
 });
 
-app.get("/api/me", (req, res) => {
+app.get("/api/me", (req, res) => { //tells server is user is logged in or not.
     if (!req.session.userId) {
         return res.json({ loggedIn: false });
     }
@@ -131,6 +142,77 @@ app.post("/api/logout", (req, res) => {
     req.session?.destroy(() => {});
     res.json({ success: true });
 });
+
+const storage = multer.diskStorage({ //tells it where to put received file. 
+    destination: (req, file, cb) => {
+        cb(null, "uploads/");
+    },
+    filename: (req, file, cb) => {
+        const uniqueName =
+            Date.now() + "-" + Math.round(Math.random() * 1e9) //Gives random file name so no overwriting.
+            + path.extname(file.originalname); //Keeps .png/jpg
+
+        cb(null, uniqueName);
+    }
+});
+
+const upload = multer({ storage });
+
+app.post("/api/upload", upload.single("file"), (req, res) => { //stores images in uploads folder.
+    if (!req.file) {
+        return res.status(400).json({ success: false });
+    }
+
+    db.prepare(
+        "INSERT INTO files (user_id, filename, original_name) VALUES (?, ?, ?)"
+    ).run(req.session.userId, req.file.filename, req.file.originalname);
+
+    res.json({
+        success: true,
+        filename: req.file.filename
+    });
+});
+
+app.get("/api/files", (req, res) => {
+    const files = db.prepare(
+        "SELECT * FROM files ORDER BY uploaded_at DESC" //gets every file (newest first)
+    ).all();
+
+    res.json(files);
+});
+
+app.delete("/api/files/:id", (req, res) => {
+    const file = db.prepare(
+        "SELECT * FROM files WHERE id = ?"
+    ).get(req.params.id);
+
+    if (!file) {
+        return res.status(404).json({
+            success: false,
+            error: "File not found"
+        });
+    }
+
+    // delete from disk
+    const filePath = path.join(__dirname, "uploads", file.filename);
+
+    fs.unlink(filePath, (err) => {
+        if (err) {
+            console.error("File delete error:", err);
+        }
+    });
+
+    // delete from DB
+    db.prepare(
+        "DELETE FROM files WHERE id = ?"
+    ).run(req.params.id);
+
+    res.json({ success: true });
+});
+
+app.use("/uploads", express.static("uploads"));
+
+
 
 app.listen(3000, () => {
     console.log('Server running on http://localhost:3000');
